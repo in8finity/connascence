@@ -1,0 +1,41 @@
+{
+  "_comment": [
+    "Hashharness schema fragment for the tracer skill (Layer 1).",
+    "set_schema REPLACES the effective type set with a full snapshot — it does",
+    "NOT merge. So MERGE these four types into the current get_schema() map and",
+    "submit the ENTIRE set (expected_prev = current head). Submitting only these",
+    "four would wipe every other skill's types from the head. See SKILL.md Step 1.",
+    "They coexist with the AIF four (AifInode/AifRA/AifCA/AifPA).",
+    "Layer-2 connascence kind keys (CoN, CoI, ...) are NOT defined here — they",
+    "live as opaque strings in attributes.kind on TraceConn items and are",
+    "interpreted by scripts/connascence.py."
+  ],
+  "types": {
+    "TraceSymbol": {
+      "_purpose": "A function/method definition — the target of calls (static spine).",
+      "links": {}
+    },
+    "TraceToken": {
+      "_purpose": "A passed/returned value. identity is run-scoped; value_hash is cross-run.",
+      "links": {}
+    },
+    "TraceStep": {
+      "_purpose": "A call site (static) or an invocation (dynamic). caller=dynamic tree; in_symbol=static spine; realizes joins them.",
+      "links": {
+        "callee":    {"kind": "single", "target_types": ["TraceSymbol"]},
+        "in_symbol": {"kind": "single", "target_types": ["TraceSymbol"]},
+        "caller":    {"kind": "single", "target_types": ["TraceStep"]},
+        "realizes":  {"kind": "single", "target_types": ["TraceStep"]},
+        "args":      {"kind": "many",   "target_types": ["TraceToken"]},
+        "returns":   {"kind": "single", "target_types": ["TraceToken"]}
+      }
+    },
+    "TraceConn": {
+      "_purpose": "A detected connascence (overlay). elements = the coupled nodes; degree = len(elements).",
+      "links": {
+        "elements": {"kind": "many",   "target_types": ["TraceStep", "TraceToken", "TraceSymbol"]},
+        "locus":    {"kind": "single", "target_types": ["TraceSymbol"]}
+      }
+    }
+  }
+}
