@@ -145,3 +145,8 @@ Programmer Should Know About Object-Oriented Design* (1995); see
 [connascence.io](https://connascence.io). This tool operationalizes it: it finds
 connascence in real code, ranks it, and turns "what's coupled to this?" into a
 question with an answer.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Use it freely, including in commercial work; no
+warranty.
