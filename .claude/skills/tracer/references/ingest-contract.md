@@ -120,6 +120,9 @@ detecting on a large dynamic trace.
 - `scripts/adapters/php_ast.php` — **static** PHP spine via nikic/php-parser
   (name-based resolution + `$row['key']` array-dim record shape). Needs
   `composer require --dev nikic/php-parser`; run with `php`.
+- `scripts/adapters/ruby_ast.rb` — **static** Ruby spine via prism (name-based
+  resolution + `row[:key]` / `.fetch(:key)` hash-access record shape). Ruby 3.4+
+  bundles prism; run with `ruby`.
   `node typescript_ast.mjs src --module-root src > static.json`
 - `scripts/adapters/python_settrace.py` — **dynamic** Python trace via
   `sys.settrace`; captures real values/identities/order/threads.

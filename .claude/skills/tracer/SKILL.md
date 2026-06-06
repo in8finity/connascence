@@ -67,6 +67,7 @@ ingests it. Static and dynamic dumps share the shape, so they merge.
 | `adapters/python_ast.py` | Python | static | symbols + call sites + literal args + **dict-key access** (stdlib `ast`) | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/typescript_ast.mjs` | TS / JS | static | same + **property/element record access** (`row.k` / `row["k"]`), via the TypeScript compiler API | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/php_ast.php` | PHP | static | same + **array-dim record access** (`$row['k']`), via nikic/php-parser | CoN, CoT, CoM, CoP, record-shape |
+| `adapters/ruby_ast.rb` | Ruby | static | same + **hash-access record shape** (`row[:k]` / `.fetch(:k)`), via prism | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/python_settrace.py` | Python | dynamic | real values, identities, order, threads (`sys.settrace`) | CoE, CoTm, CoV, CoI |
 
 Run a **static** adapter for breadth (whole codebase, no execution) and a
@@ -78,7 +79,13 @@ V8 cpuprofile, …) are separate adapters emitting the same JSON.
 the project being analyzed (it resolves the compiler from your cwd).
 `php_ast.php` needs PHP + nikic/php-parser — `composer require --dev
 nikic/php-parser` in the project (it finds `vendor/autoload.php` from your cwd or
-`COMPOSER_VENDOR`). The Python adapters are stdlib-only.
+`COMPOSER_VENDOR`). `ruby_ast.rb` needs Ruby 3.4+ (prism is bundled) or
+`gem install prism` on older Rubies — no other deps. The Python adapters are
+stdlib-only.
+
+> **Ruby + CoT.** Ruby has no inline parameter types, so CoT fires on *every*
+> parameter — uniformly uninformative. When analyzing Ruby, focus with
+> `trace-detect.py --only CoN,CoP,CoM,CoV,CoI` (or just read past the CoT block).
 
 ## Workflow
 
@@ -203,6 +210,8 @@ Prose is fine for a single short call chain or a throwaway question.
   API (needs `npm i -D typescript`; run with `node`).
 - `adapters/php_ast.php` — static PHP spine via nikic/php-parser (needs
   `composer require --dev nikic/php-parser`; run with `php`).
+- `adapters/ruby_ast.rb` — static Ruby spine via prism (Ruby 3.4+ bundles it,
+  else `gem install prism`; run with `ruby`).
 - `adapters/python_settrace.py` — dynamic Python trace via `sys.settrace`.
 
 ## References
