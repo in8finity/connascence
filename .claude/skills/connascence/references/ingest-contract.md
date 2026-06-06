@@ -128,7 +128,8 @@ detecting on a large dynamic trace.
   record shape). `dart pub add --dev "analyzer:^6.0.0"`; run with `dart run`.
   `node typescript_ast.mjs src --module-root src > static.json`
 - `scripts/adapters/python_settrace.py` — **dynamic** Python trace via
-  `sys.settrace`; captures real values/identities/order/threads.
+  `sys.settrace`; captures real values/identities/order/threads. Pass
+  `Tracer(scope=["src/"])` to record only your code (skip stdlib/library noise).
 
 A static and a dynamic doc for the same code **merge** by matching
 `(callee qualname, site_file, site_line)`: set `realizes` on each dynamic step

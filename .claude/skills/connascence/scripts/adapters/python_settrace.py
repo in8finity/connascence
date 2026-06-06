@@ -7,9 +7,16 @@ cpuprofile reader, …) are separate adapters that emit the same JSON shape.
 
 Usage:
     from python_settrace import Tracer
-    with Tracer(run_id="demo") as tr:
+    with Tracer(run_id="demo", scope=["src/"]) as tr:   # scope = your code only
         my_entrypoint()
     tr.dump("trace.json")        # a dynamic TraceDoc ready for trace-ingest.py
+
+`scope` restricts recording to frames whose file lives under one of the given
+roots (the dynamic analog of `trace-detect.py --exclude-external`). Without it,
+everything except this adapter is traced — which includes stdlib/library
+internals (threading, asyncio, …) and usually buries your code in noise. Library
+code called *between* two of your frames is skipped but transparent: the inner
+in-scope call's `caller` resolves to its nearest in-scope ancestor.
 
 What it captures per call: callee qualname + def site (→ TraceSymbol), the
 invoking step (→ caller link), and a DataToken per argument and return value
@@ -27,6 +34,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sys
 import threading
 
@@ -50,7 +58,8 @@ _IMMUTABLE = (int, float, str, bool, bytes, type(None), tuple, frozenset)
 
 
 class Tracer:
-    def __init__(self, run_id="run", entrypoint=None, max_steps=100_000):
+    def __init__(self, run_id="run", entrypoint=None, max_steps=100_000,
+                 scope=None):
         self.run_id = run_id
         self.entrypoint = entrypoint
         self.max_steps = max_steps
@@ -59,6 +68,20 @@ class Tracer:
         self.steps = []
         self._stack = []         # step ids (per thread, simplified to one)
         self._n = 0
+        # scope: only record frames whose file is under one of these roots.
+        # None → record everything except this adapter's own machinery.
+        if scope is None:
+            self.scope = None
+        else:
+            roots = scope if isinstance(scope, (list, tuple)) else [scope]
+            self.scope = tuple(os.path.abspath(r) for r in roots)
+
+    def _in_scope(self, filename: str) -> bool:
+        if "python_settrace" in filename:
+            return False                       # never trace our own machinery
+        if self.scope is None:
+            return True
+        return os.path.abspath(filename).startswith(self.scope)
 
     # -- symbol/token interning -------------------------------------------
 
@@ -107,14 +130,17 @@ class Tracer:
         if self._n >= self.max_steps:
             return None
         code = frame.f_code
+        # Out-of-scope frame: don't record it and don't push. Returning None
+        # disables only THIS frame's local (line/return) events — the global
+        # trace still fires for nested frames, so in-scope code called from
+        # library code is still captured, and its `caller` resolves to the
+        # nearest in-scope ancestor still on the stack.
+        if not self._in_scope(code.co_filename):
+            return None
         qualname = getattr(code, "co_qualname", code.co_name)
         module = frame.f_globals.get("__name__", "")
         if module and not qualname.startswith(module):
             qualname = f"{module}.{qualname}"
-        # skip our own machinery
-        if "python_settrace" in code.co_filename:
-            self._stack.append(None)
-            return self._trace
         self._n += 1
         callee = self._symbol(code, qualname, module=module or None)
         # arguments by position

@@ -76,6 +76,13 @@ Run a **static** adapter for breadth (whole codebase, no execution) and a
 `(callee qualname, site_file, site_line)`. Other languages (ruby-prof reader,
 V8 cpuprofile, …) are separate adapters emitting the same JSON.
 
+**Scope a dynamic trace to your own code** — `Tracer(scope=["src/"])` records
+only frames under those roots. Without it, stdlib/library internals (threading,
+asyncio, ORM, …) are traced too and bury your findings; scoping is the dynamic
+analog of `--exclude-external`. Library code called *between* two of your frames
+is skipped transparently (the inner call's `caller` resolves to its nearest
+in-scope ancestor), so the call tree stays intact.
+
 `typescript_ast.mjs` needs the `typescript` package — `npm i -D typescript` in
 the project being analyzed (it resolves the compiler from your cwd).
 `php_ast.php` needs PHP + nikic/php-parser — `composer require --dev
