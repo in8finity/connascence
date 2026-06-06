@@ -72,6 +72,7 @@ ingests it. Static and dynamic dumps share the shape, so they merge.
 | `adapters/python_settrace.py` | Python | dynamic | real values, identities, order, threads (`sys.settrace`) | CoE, CoTm, CoV, CoI |
 | `adapters/ruby_tracepoint.rb` | Ruby | dynamic | real values, identities, order, threads (`TracePoint`) | CoE, CoTm, CoV, CoI |
 | `adapters/js_instrument.js` | JS / TS (Node) | dynamic | values, identities, order via function wrapping | CoV, CoI, CoE (CoTm only with `worker_threads`) |
+| `adapters/php_uopz.php` | PHP | dynamic | values, identities, order via uopz hooks | CoV, CoI, CoE (CoTm needs real threads) |
 
 Run a **static** adapter for breadth (whole codebase, no execution) and a
 **dynamic** adapter for the strong, otherwise-invisible couplings; merge by
@@ -234,6 +235,12 @@ Prose is fine for a single short call chain or a throwaway question.
   instrument the emitted JS. Caveat: same-module internal calls (not via the
   exported binding) aren't captured — JS has no call hook; drive through exports
   or instrument each module so cross-module calls route through the wrappers.
+- `adapters/php_uopz.php` — dynamic PHP trace via the uopz extension's
+  `uopz_set_hook` (`pecl install uopz`). NOT an Xdebug-trace reader: Xdebug
+  renders objects by value with no stable handle, so it can't reconstruct
+  identity (CoV only); uopz hooks see live `$this`/args, so `spl_object_id`
+  gives real identity. Pre-hook only → no `returns`/`caller` (the dynamic kinds
+  need neither). Classes autoloaded after `instrument()` aren't hooked.
 
 ## References
 

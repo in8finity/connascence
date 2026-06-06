@@ -139,6 +139,11 @@ detecting on a large dynamic trace.
   functions + class-prototype methods; drive through the exports. Captures
   values/identities/order; CoTm only under `worker_threads`. (Not a --cpu-prof
   reader — a profile lacks values/identities.)
+- `scripts/adapters/php_uopz.php` — **dynamic** PHP trace via the uopz extension
+  (`uopz_set_hook`). Hooks every in-scope function/method; the hook sees live
+  `$this` + args, so `spl_object_id` yields real identity. Captures
+  values/identities/order. (Not an Xdebug-trace reader — Xdebug renders objects
+  by value with no handle, so it can't recover identity.)
 
 A static and a dynamic doc for the same code **merge** by matching
 `(callee qualname, site_file, site_line)`: set `realizes` on each dynamic step

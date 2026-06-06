@@ -107,16 +107,16 @@ how the history cache works?"* — and it drives this pipeline for you.
 |----------|---------|-------|-------|
 | Python | `python_ast.py` (static), `python_settrace.py` (dynamic) | static + dynamic | stdlib only |
 | TypeScript / JS | `typescript_ast.mjs` (static), `js_instrument.js` (dynamic, Node) | static + dynamic | `npm i -D typescript`; instrumentation is stdlib |
-| PHP | `php_ast.php` | static | `composer require --dev nikic/php-parser` |
+| PHP | `php_ast.php` (static), `php_uopz.php` (dynamic) | static + dynamic | `composer require --dev nikic/php-parser`; `pecl install uopz` |
 | Ruby | `ruby_ast.rb` (static), `ruby_tracepoint.rb` (dynamic) | static + dynamic | Ruby 3.4+ (prism bundled); TracePoint is stdlib |
 | Dart | `dart_ast.dart` | static | `dart pub add --dev "analyzer:^6.0.0"` |
 
 Each static adapter also captures **record shape** — `row['user_id']` /
 `row.userId` / `$row['id']` / `row[:id]` (Dart/PHP/JS/Ruby/Python alike) — the
 dict/DB-row key coupling that
-breaks silently when a producer renames a field. The Python (`sys.settrace`), Ruby (`TracePoint`), and Node (function-
-wrapping) dynamic adapters add the runtime-only kinds (execution order, timing,
-value, identity).
+breaks silently when a producer renames a field. The Python (`sys.settrace`), Ruby (`TracePoint`), Node (function-wrapping),
+and PHP (uopz hooks) dynamic adapters add the runtime-only kinds (execution
+order, timing, value, identity).
 
 ## What it is not
 
