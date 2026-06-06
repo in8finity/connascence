@@ -1,6 +1,6 @@
 # Query recipes
 
-The tracer holds the graph in memory and runs everything as plain dict
+The connascence skill holds the graph in memory and runs everything as plain dict
 comprehensions over it — no server, no query language. These recipes show the
 patterns the scripts use; reach for them for ad-hoc inspection or when writing a
 new detector. The `scripts/` already implement all of this.

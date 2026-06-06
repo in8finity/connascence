@@ -1,9 +1,9 @@
 ---
-name: tracer
+name: connascence
 description: Build a call trace from code (a static call graph and/or a real runtime trace) where every step is a node linked to its caller, carry the data passed at each step, and expose connascences (Page-Jones coupling taxonomy) as a ranked analysis layer. Operates entirely on local JSON — no server or database. Use when the user wants to map call flow, trace a function's callers/callees, reason about what data is passed between calls, find coupling/connascence, locate hidden shared state or execution-order dependencies, assess change/blast radius, or prioritize refactoring by coupling strength. Trigger on "call trace", "call graph", "trace this code", "who calls / what does it call", "connascence", "coupling analysis", "shared state", "hidden dependency", "execution order dependency", "blast radius", "impact radius", or whenever reasoning about how data flows between functions matters.
 ---
 
-# Tracer — call traces → connascence
+# Connascence — coupling analysis from call traces
 
 This skill models a program's **call trace** as a graph, then exposes
 **connascence** — Meilir Page-Jones's coupling taxonomy — as a ranked analysis
@@ -185,7 +185,7 @@ strength × degree × locality_penalty` (`same_function` 1 … `cross_service` 1
 
 ## When to use this skill vs prose
 
-Use the tracer when:
+Use this skill when:
 - mapping call flow across many functions/modules,
 - reasoning about *what data* crosses call boundaries,
 - hunting coupling/connascence, hidden shared state, or order dependencies,

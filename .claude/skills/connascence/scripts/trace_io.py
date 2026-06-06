@@ -1,6 +1,6 @@
-"""Shared I/O + graph normalization for the tracer skill.
+"""Shared I/O + graph normalization for the connascence skill.
 
-Every tracer script runs over a uniform in-memory graph. The primary input is a
+Every script in this skill runs over a uniform in-memory graph. The primary input is a
 **TraceDoc** (an adapter's output — keys are adapter-assigned `id` strings like
 `sym:…`, `step:…`, `tok:…`). A pre-flattened **items list** (`{"items":[...]}`
 or a bare list of `{type, attributes, links, id}` records) is also accepted, so

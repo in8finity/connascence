@@ -1,6 +1,6 @@
 # TraceDoc — the language-agnostic ingest contract
 
-The boundary between "any language" and the tracer skill. A per-language
+The boundary between "any language" and the connascence skill. A per-language
 **adapter** (Python AST, `sys.settrace` harness, ruby-prof reader, V8
 cpuprofile reader, …) emits **one JSON document** in this shape. The skill
 never parses source — it only consumes TraceDocs. Static and dynamic dumps are

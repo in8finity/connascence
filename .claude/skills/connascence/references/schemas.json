@@ -1,6 +1,6 @@
 {
   "_comment": [
-    "The tracer data model: the four node types and their typed links.",
+    "The connascence skill data model: the four node types and their links.",
     "This is documentation, not a server schema — the skill holds the graph in",
     "memory (scripts/trace_io.py), which checks these link shapes structurally.",
     "Links hold the target node's adapter-assigned id (sym:.../step:.../tok:...).",
