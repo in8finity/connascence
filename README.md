@@ -139,7 +139,6 @@ the runtime-only kinds (execution order, timing, value, identity).
     trace-validate.py       # structural checks
     trace-render.py         # Graphviz DOT
     adapters/               # python / typescript / php / ruby / dart
-design.md                   # design rationale (historical storage notes)
 ```
 
 ## Background
