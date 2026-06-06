@@ -123,6 +123,9 @@ detecting on a large dynamic trace.
 - `scripts/adapters/ruby_ast.rb` — **static** Ruby spine via prism (name-based
   resolution + `row[:key]` / `.fetch(:key)` hash-access record shape). Ruby 3.4+
   bundles prism; run with `ruby`.
+- `scripts/adapters/dart_ast.dart` — **static** Dart spine via package:analyzer
+  6.x (name-based resolution + declared param types + `row['key']` index-access
+  record shape). `dart pub add --dev "analyzer:^6.0.0"`; run with `dart run`.
   `node typescript_ast.mjs src --module-root src > static.json`
 - `scripts/adapters/python_settrace.py` — **dynamic** Python trace via
   `sys.settrace`; captures real values/identities/order/threads.

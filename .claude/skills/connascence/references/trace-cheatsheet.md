@@ -50,6 +50,8 @@ dataclass / `from_db_row` / typed interface at the boundary.
   checker it's indistinguishable from class-member access.
 - **Ruby** captures `row[:key]` / `row['key']` and `row.fetch(:key)` (Ruby's
   params-hash / JSON / DB-row pattern). Symbol and string keys both count.
+- **Dart** captures `row['key']` (index access — Map / JSON / decoded-row
+  pattern). Dart writes parameter types inline, so CoT is informative here.
 
 The static spine alone yields kinds 1–5; a dynamic overlay (real values,
 identities, ordering, threads) unlocks 6–9. This is why the skill supports

@@ -68,6 +68,7 @@ ingests it. Static and dynamic dumps share the shape, so they merge.
 | `adapters/typescript_ast.mjs` | TS / JS | static | same + **property/element record access** (`row.k` / `row["k"]`), via the TypeScript compiler API | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/php_ast.php` | PHP | static | same + **array-dim record access** (`$row['k']`), via nikic/php-parser | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/ruby_ast.rb` | Ruby | static | same + **hash-access record shape** (`row[:k]` / `.fetch(:k)`), via prism | CoN, CoT, CoM, CoP, record-shape |
+| `adapters/dart_ast.dart` | Dart | static | same + **index-access record shape** (`row['k']`), via package:analyzer | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/python_settrace.py` | Python | dynamic | real values, identities, order, threads (`sys.settrace`) | CoE, CoTm, CoV, CoI |
 
 Run a **static** adapter for breadth (whole codebase, no execution) and a
@@ -80,8 +81,9 @@ the project being analyzed (it resolves the compiler from your cwd).
 `php_ast.php` needs PHP + nikic/php-parser — `composer require --dev
 nikic/php-parser` in the project (it finds `vendor/autoload.php` from your cwd or
 `COMPOSER_VENDOR`). `ruby_ast.rb` needs Ruby 3.4+ (prism is bundled) or
-`gem install prism` on older Rubies — no other deps. The Python adapters are
-stdlib-only.
+`gem install prism` on older Rubies. `dart_ast.dart` needs the Dart SDK +
+`package:analyzer` 6.x — `dart pub add --dev "analyzer:^6.0.0"` in a Dart package
+(analyzer 13+ changed the AST API; pin ^6). The Python adapters are stdlib-only.
 
 > **Ruby + CoT.** Ruby has no inline parameter types, so CoT fires on *every*
 > parameter — uniformly uninformative. When analyzing Ruby, focus with
@@ -212,6 +214,8 @@ Prose is fine for a single short call chain or a throwaway question.
   `composer require --dev nikic/php-parser`; run with `php`).
 - `adapters/ruby_ast.rb` — static Ruby spine via prism (Ruby 3.4+ bundles it,
   else `gem install prism`; run with `ruby`).
+- `adapters/dart_ast.dart` — static Dart spine via package:analyzer 6.x
+  (`dart pub add --dev "analyzer:^6.0.0"`; run with `dart run`).
 - `adapters/python_settrace.py` — dynamic Python trace via `sys.settrace`.
 
 ## References

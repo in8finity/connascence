@@ -87,6 +87,7 @@ python3 $S/adapters/python_ast.py     src/ --module-root src      > doc.json   #
 node     $S/adapters/typescript_ast.mjs src --module-root src      > doc.json   # TS/JS
 php      $S/adapters/php_ast.php       src/ --module-root src      > doc.json   # PHP
 ruby     $S/adapters/ruby_ast.rb       lib/ --module-root lib      > doc.json   # Ruby
+dart run $S/adapters/dart_ast.dart     lib/ --module-root lib      > doc.json   # Dart
 
 # 2. rank the couplings (drop builtins/library calls to keep it actionable)
 python3 $S/trace-detect.py --input doc.json --exclude-external
@@ -108,9 +109,11 @@ how the history cache works?"* — and it drives this pipeline for you.
 | TypeScript / JS | `typescript_ast.mjs` | static | `npm i -D typescript` |
 | PHP | `php_ast.php` | static | `composer require --dev nikic/php-parser` |
 | Ruby | `ruby_ast.rb` | static | Ruby 3.4+ (prism bundled) |
+| Dart | `dart_ast.dart` | static | `dart pub add --dev "analyzer:^6.0.0"` |
 
 Each static adapter also captures **record shape** — `row['user_id']` /
-`row.userId` / `$row['id']` / `row[:id]` — the dict/DB-row key coupling that
+`row.userId` / `$row['id']` / `row[:id]` (Dart/PHP/JS/Ruby/Python alike) — the
+dict/DB-row key coupling that
 breaks silently when a producer renames a field. The Python dynamic adapter adds
 the runtime-only kinds (execution order, timing, value, identity).
 
@@ -118,8 +121,9 @@ the runtime-only kinds (execution order, timing, value, identity).
 
 - **Not a linter or type checker.** It finds *coupling*, not correctness bugs.
 - **Not source of truth.** A TraceDoc is derived; regenerate it, don't archive it.
-- **Static resolution is name-based** where a language lacks types (Python, PHP,
-  Ruby) — ambiguous calls degrade to "external", never to a wrong target.
+- **Static resolution is name-based** for Python, PHP, Ruby, and Dart —
+  ambiguous calls degrade to "external", never to a wrong target. (TypeScript
+  uses the compiler's type checker for precise resolution.)
 
 ## Layout
 
@@ -134,7 +138,7 @@ the runtime-only kinds (execution order, timing, value, identity).
     trace-ingest.py         # validate + dedup
     trace-validate.py       # structural checks
     trace-render.py         # Graphviz DOT
-    adapters/               # python / typescript / php / ruby
+    adapters/               # python / typescript / php / ruby / dart
 design.md                   # design rationale (historical storage notes)
 ```
 
