@@ -6,11 +6,12 @@
 Last updated: 2026-06-07
 
 ## Summary
-- Checks: 3 pass / 5 total (2 are gap assertions, expected to produce counterexamples)
-- Scenarios: 2 SAT (`ActualConfig`, `BundledStrongCopyleftHazard`)
+- Checks: 3 pass / 6 total (3 are gap assertions, expected to produce counterexamples)
+- Scenarios: 3 SAT (`ActualConfig`, `BundledStrongCopyleftHazard`, `BundledPermissiveClosure`)
 - Source artifacts compared: repo file set (`git ls-files`), `README.md` "Dependencies
-  & licenses" table, `LICENSE`
+  & licenses" table, `LICENSE`, transitive trees (npm / composer / gem / `dart pub deps`)
 - Discrepancies found: 0 (6 Aligned, 0 FixSource, 0 FixModel, 0 Conflict, 0 Exclusion)
+- Transitive closure: all permissive (BSD-3-Clause / MIT) — no copyleft anywhere
 
 ## Verdict
 
@@ -58,10 +59,41 @@ shipped artifact), not `Bundled`. No conflict; flagged so the two senses of
   strong-copyleft dep into the permissive MIT distribution is incompatible.
 - `check NoUnattributedRedistribution` — counterexample (gap): redistributing a
   dep without preserving notices violates its license.
+- `check BundledClosureCompatible` — counterexample (gap): bundling a permissive
+  dep whose *transitive* closure contains copyleft still breaks MIT — you must
+  vet the whole tree (`shipped[c] = c + c.^dependsOn`), not just the direct dep.
 - `run ActualConfig` — SAT: the real repo configuration (nothing bundled) is
   consistent.
+- `run BundledPermissiveClosure` — SAT: a bundled dep whose entire closure is
+  permissive is fine — the shape of every real adapter's tree.
 - `run BundledStrongCopyleftHazard` — SAT: the hazard is reachable in the design
   space (so the no-bundling discipline is load-bearing, not incidental).
+
+## Transitive dependencies
+
+Checked the dependency tree of each direct dep (npm / Composer / gem / `dart pub deps`):
+
+| Direct dep | Transitive deps | Licenses in closure |
+|---|---|---|
+| typescript | **none** (npm: no runtime deps) | — |
+| nikic/php-parser | **none** (requires only `php` + `ext-tokenizer/json/ctype`) | — |
+| uopz | **none** (C extension, no PHP packages) | — |
+| prism | **none** (foundational Ruby gem, no runtime gem deps) | — |
+| analyzer (`^6`) | **17** Dart packages (see below) | BSD-3-Clause + MIT |
+
+`analyzer ^6.4.1` transitive closure: `_fe_analyzer_shared, async, collection,
+convert, crypto, file, glob, meta, package_config, path, pub_semver, source_span,
+string_scanner, term_glyph, typed_data, watcher, yaml` — all `dart-lang`
+ecosystem packages. **All permissive**, predominantly BSD-3-Clause; `yaml` is MIT.
+Spot-verified on pub.dev: `crypto` BSD-3-Clause, `_fe_analyzer_shared` BSD-3-Clause,
+`meta` BSD-3-Clause, `yaml` MIT. **No copyleft anywhere in any adapter's tree.**
+
+Verdict: **Aligned**. The model's `obligationSatisfied` now ships the whole
+transitive closure when a dep is bundled (`shipped[c] = c + c.^dependsOn`);
+`check BundledClosureCompatible` proves a copyleft *transitive* dep would break
+MIT just as a direct one would. Because connascence bundles nothing, the
+RuntimeDep exemption applies transitively too — and since every transitive
+license is permissive, even a user who installs an adapter pulls no copyleft.
 
 ## Boundary Review
 
@@ -75,7 +107,12 @@ shipped artifact), not `Bundled`. No conflict; flagged so the two senses of
 | EPL file-scope mechanics | Stub | `WeakCopyleft` | `dot` is a BuildTool | Conservative; `dot` triggers nothing anyway |
 
 ## Remaining gaps (not modeled)
-- **Transitive dependencies** of the direct deps (e.g. typescript's, analyzer's
-  own deps) are not enumerated. They are not redistributed by this repo either,
-  so the same RuntimeDep exemption applies — but a full SBOM-level audit is out
-  of scope here.
+- **Version pinning of transitive licenses.** The transitive trees were resolved
+  at audit time (`analyzer 6.4.1` and its closure). A future `dart pub upgrade`
+  could in principle pull a new transitive package under a different license;
+  re-run `dart pub deps` if the resolved versions change. (All current Dart-team
+  packages are permissive, and the ecosystem convention is stable, so this is
+  low risk.)
+- **Deep transitive trees of the npm/Composer/gem deps** are confirmed empty
+  (those direct deps have no package dependencies), so there is nothing deeper
+  to audit there.

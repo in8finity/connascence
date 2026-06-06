@@ -58,8 +58,15 @@ one sig Project { distLicense: one License }
 sig Component {
   lic: one License,
   linkage: one Linkage,
-  attributed: one Bool   -- does the project preserve this dep's notices?
+  attributed: one Bool,        -- does the project preserve this dep's notices?
+  dependsOn: set Component     -- this component's own (transitive) dependencies
 }
+
+-- Dependency graphs don't cycle.
+fact Acyclic { all c: Component | c not in c.^dependsOn }
+
+-- Bundling a component ships its entire transitive closure, not just its top.
+fun shipped[c: Component]: set Component { c + c.^dependsOn }
 
 -- The actual dependency set of the repo (for the concrete audit).
 one sig TypeScript, PhpParser, Uopz, Prism, Analyzer, GraphvizDot extends Component {}
@@ -76,6 +83,10 @@ fact RealProject {
   Analyzer.lic    = BSD3    and Analyzer.linkage    = RuntimeDep
   GraphvizDot.lic = EPL1    and GraphvizDot.linkage = BuildTool
   all c: realDeps | c.attributed = True
+  -- connascence treats each direct dep as an opaque runtime install; their own
+  -- transitive trees are not redistributed by this repo. Enumerated + verified
+  -- permissive (BSD-3-Clause / MIT) in licenses-reconciliation.md.
+  no realDeps.dependsOn
 }
 
 -- Obligations trigger only when the dependency is redistributed inside the artifact.
@@ -90,10 +101,12 @@ pred compatibleInto[a: License, b: License] {
   or (a.category = StrongCopyleft and b.category = StrongCopyleft)
 }
 
--- A component meets its license obligations toward the project.
+-- A component meets its license obligations toward the project. Bundling it
+-- ships its whole transitive closure, so EVERY shipped license must be
+-- compatible — not just the top-level dep's.
 pred obligationSatisfied[c: Component] {
   redistributes[c] implies {
-    compatibleInto[c.lic, Project.distLicense]
+    all d: shipped[c] | compatibleInto[d.lic, Project.distLicense]
     c.lic.requiresAttribution = True implies c.attributed = True
   }
 }
@@ -137,6 +150,15 @@ assert NoUnattributedRedistribution {
 }
 check NoUnattributedRedistribution for 8 -- EXPECT counterexample (the hazard)
 
+-- (6) GAP — bundling a dep whose TRANSITIVE closure contains strong copyleft is
+--     still incompatible, even if the top-level dep is permissive. Proves you
+--     must vet the whole tree, not just the direct dependency.
+assert BundledClosureCompatible {
+  all c: Component | redistributes[c]
+    implies (all d: shipped[c] | compatibleInto[d.lic, Project.distLicense])
+}
+check BundledClosureCompatible for 8     -- EXPECT counterexample (transitive copyleft)
+
 -- ---- scenarios ---------------------------------------------------------
 
 -- The real repo configuration: nothing is bundled, so nothing triggers.
@@ -147,4 +169,11 @@ run BundledStrongCopyleftHazard {
   some c: Component | c.linkage = Bundled
                       and c.lic = GPL3
                       and Project.distLicense.category = Permissive
+} for 8
+
+-- Bundling a permissive dep with a permissive transitive closure is fine —
+-- this is the shape of every real adapter's dependency tree.
+run BundledPermissiveClosure {
+  some c: Component | redistributes[c] and some c.dependsOn
+                      and all d: shipped[c] | d.lic.category in (Permissive + WeakCopyleft)
 } for 8
