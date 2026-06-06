@@ -1,19 +1,18 @@
 """Shared I/O + graph normalization for the tracer skill.
 
-Every tracer script runs over a uniform in-memory graph regardless of source:
+Every tracer script runs over a uniform in-memory graph. The primary input is a
+**TraceDoc** (an adapter's output — keys are adapter-assigned `id` strings like
+`sym:…`, `step:…`, `tok:…`). A pre-flattened **items list** (`{"items":[...]}`
+or a bare list of `{type, attributes, links, id}` records) is also accepted, so
+a graph the skill has already emitted can be re-loaded.
 
-  * a raw **TraceDoc** (adapter ids, before materialization) — keys are the
-    adapter-assigned `id` strings (`sym:…`, `step:…`, `tok:…`);
-  * a **hashharness dump** (`{"items":[...]}` or a bare `find_items` list) —
-    keys are `record_sha256` content-addresses.
-
-Either way `load_graph()` returns a `Graph` whose nodes have `.type`, `.attrs`,
-and `.links` (link values are ids into the same graph). Detectors, the
-validator, and the renderer never care which form they came from.
+`load_graph()` returns a `Graph` whose nodes have `.type`, `.attrs`, and
+`.links` (link values are ids into the same graph). Detectors, the validator,
+and the renderer never care which form they came from.
 
 Node types: TraceSymbol, TraceStep, TraceToken, TraceConn.
 
-Stdlib only. No live hashharness server required.
+Stdlib only. No server.
 """
 from __future__ import annotations
 
@@ -106,29 +105,30 @@ def _is_tracedoc(obj: Any) -> bool:
     ) and "items" not in obj
 
 
-def _is_hh_dump(obj: Any) -> bool:
+def _is_items_dump(obj: Any) -> bool:
     if isinstance(obj, list):
         return True
     return isinstance(obj, dict) and "items" in obj
 
 
 def load_graph(obj: Any) -> Graph:
-    """Normalize a TraceDoc or hashharness dump into a Graph."""
+    """Normalize a TraceDoc or a flat items list into a Graph."""
     if _is_tracedoc(obj):
         return _from_tracedoc(obj)
-    if _is_hh_dump(obj):
-        return _from_hh(obj)
+    if _is_items_dump(obj):
+        return _from_items(obj)
     raise ValueError(
-        "input is neither a TraceDoc (symbols/steps/tokens) nor a "
-        "hashharness dump (items / bare list)"
+        "input is neither a TraceDoc (symbols/steps/tokens) nor an "
+        "items list (items / bare list)"
     )
 
 
-def _from_hh(obj: Any) -> Graph:
+def _from_items(obj: Any) -> Graph:
+    """Load a pre-flattened list of {type, attributes, links, id} records."""
     items = obj if isinstance(obj, list) else obj.get("items", [])
     nodes: dict = {}
     for it in items:
-        nid = it.get("record_sha256") or it.get("id")
+        nid = it.get("id")
         if not nid:
             continue
         nodes[nid] = Node(

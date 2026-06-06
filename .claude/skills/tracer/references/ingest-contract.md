@@ -6,8 +6,8 @@ cpuprofile reader, …) emits **one JSON document** in this shape. The skill
 never parses source — it only consumes TraceDocs. Static and dynamic dumps are
 the *same shape*; dynamic-only fields are optional, so they merge.
 
-`scripts/trace-ingest.py` validates a TraceDoc against this contract and emits
-the ordered `create_item` materialization plan.
+`scripts/trace-ingest.py` validates a TraceDoc against this contract and
+optionally dedups its tokens.
 
 ## Document
 
@@ -16,8 +16,7 @@ the ordered `create_item` materialization plan.
   "version": "1",
   "kind": "static" | "dynamic" | "merged",   // required
   "run_id": "2026-06-04T12:00Z#pid4821",       // REQUIRED if dynamic + tokens (identities are run-scoped)
-  "entrypoint": "pkg.cli.main",                // optional; used to name the work package
-  "work_package_id": "trace:billing:main",     // optional; default trace:<entrypoint>
+  "entrypoint": "pkg.cli.main",                // optional; a label for this trace
   "symbols": [ Symbol, … ],
   "steps":   [ Step,   … ],
   "tokens":  [ Token,  … ]                       // dynamic only
@@ -28,7 +27,7 @@ the ordered `create_item` materialization plan.
 
 ```jsonc
 {
-  "id": "sym:pkg.mod.Class.method",   // adapter-stable; resolved to record_sha256 on materialize
+  "id": "sym:pkg.mod.Class.method",   // adapter-stable; link targets reference it
   "qualname": "pkg.mod.Class.method", // REQUIRED
   "kind": "function|method|closure|builtin",
   "file": "src/foo.py", "line": 42,
@@ -101,7 +100,7 @@ node type**; populated links/attrs distinguish them.
 A real run emits millions of tokens. `trace-ingest.py --dedup` collapses tokens
 with identical `(value_hash, identity, type)` into one class and rewrites step
 refs; CoV/CoI then run over **classes**, not occurrences. Run dedup before
-materializing to hashharness.
+detecting on a large dynamic trace.
 
 ## Minimal adapter responsibilities
 

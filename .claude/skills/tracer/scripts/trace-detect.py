@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """Run the 9 connascence detectors over a trace graph.
 
-Consumes either a raw TraceDoc or a hashharness dump (see trace_io). Emits
-findings ranked by severity (strength × degree × locality_penalty).
+Consumes a TraceDoc (see trace_io). Emits findings ranked by severity
+(strength × degree × locality_penalty).
 
-  python3 trace-detect.py --input dump.json                 # ranked report
-  python3 trace-detect.py --input dump.json --format json    # findings as JSON
-  python3 trace-detect.py --input dump.json --format ca-stubs # create_item stubs
-  python3 trace-detect.py --input dump.json --only CoI,CoV    # subset
-  python3 trace-detect.py --input dump.json --include-provisional  # CoA et al.
-  python3 trace-detect.py --input dump.json --min-degree 3    # CoN/CoP threshold
+  python3 trace-detect.py --input doc.json                  # ranked report
+  python3 trace-detect.py --input doc.json --format json     # findings as JSON
+  python3 trace-detect.py --input doc.json --only CoI,CoV    # subset
+  python3 trace-detect.py --input doc.json --exclude-external # in-codebase only
+  python3 trace-detect.py --input doc.json --include-provisional  # CoA et al.
+  python3 trace-detect.py --input doc.json --min-degree 3    # CoN/CoP threshold
 
-Findings (`TraceConn` shape):
+Each finding:
   {kind, dynamic, strength, degree, locality, severity, confidence,
    rationale, refactor, elements:[id…], locus:id|None}
 
-Stdlib only. No live server needed.
+Stdlib only. No server.
 """
 from __future__ import annotations
 
@@ -445,32 +445,10 @@ def _fmt_report(findings: list) -> str:
     return "\n".join(lines)
 
 
-def _fmt_ca_stubs(findings: list) -> str:
-    stubs = []
-    for f in findings:
-        stubs.append({
-            "type": "TraceConn",
-            "title": f"{f['kind']} ({f['name']})",
-            "text": f["rationale"],
-            "attributes": {
-                "kind": f["kind"], "dynamic": f["dynamic"],
-                "strength_rank": f["strength"], "degree": f["degree"],
-                "locality": f["locality"], "severity": f["severity"],
-                "confidence": f["confidence"], "rationale": f["rationale"],
-                "refactor": f["refactor"],
-            },
-            "links": {k: v for k, v in (
-                ("elements", f["elements"]),
-                ("locus", f["locus"]),
-            ) if v},
-        })
-    return json.dumps(stubs, indent=2)
-
-
 def main(argv: list) -> int:
     ap = argparse.ArgumentParser(description="Detect connascence in a trace graph.")
-    ap.add_argument("--input", "-i", required=True, help="TraceDoc or hh dump; - for stdin")
-    ap.add_argument("--format", choices=["report", "json", "ca-stubs"], default="report")
+    ap.add_argument("--input", "-i", required=True, help="TraceDoc; - for stdin")
+    ap.add_argument("--format", choices=["report", "json"], default="report")
     ap.add_argument("--only", help="comma-separated kinds, e.g. CoI,CoV")
     ap.add_argument("--min-degree", type=int, default=3, help="threshold for CoN")
     ap.add_argument("--include-provisional", action="store_true")
@@ -484,8 +462,6 @@ def main(argv: list) -> int:
 
     if args.format == "json":
         print(json.dumps(findings, indent=2))
-    elif args.format == "ca-stubs":
-        print(_fmt_ca_stubs(findings))
     else:
         print(_fmt_report(findings))
     return 0

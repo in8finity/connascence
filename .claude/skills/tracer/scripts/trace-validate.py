@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""Structural well-formedness of a materialized trace graph (Layer-1 rules),
-plus an optional crypto fold-in from verify_work_package.
+"""Structural well-formedness of a trace graph.
 
-  python3 trace-validate.py --input dump.json
-  python3 trace-validate.py --input dump.json --strict          # warnings → errors
-  python3 trace-validate.py --input dump.json --crypto vwp.json  # fold in integrity
+  python3 trace-validate.py --input doc.json
+  python3 trace-validate.py --input doc.json --strict   # warnings → errors
 
-Checks (mirrors aif-validate.py):
+Checks:
   [S1] every TraceStep has a `callee` resolving to a TraceSymbol
   [S2] caller/realizes resolve to TraceStep; in_symbol to TraceSymbol
   [S3] args/returns resolve to TraceToken
@@ -14,9 +12,8 @@ Checks (mirrors aif-validate.py):
   [S5] TraceConn.elements / locus resolve to existing nodes
   [W1] dynamic token identity is run-scoped (warn if no run_id)
   [W2] TraceConn.kind is a known connascence key
-  [C1] crypto integrity (from --crypto verify_work_package JSON)
 
-Exit 1 on any error. The structural pass needs no live server.
+Exit 1 on any error. Stdlib only, no server.
 """
 from __future__ import annotations
 
@@ -28,7 +25,7 @@ from connascence import CONNASCENCES
 from trace_io import load_graph, read_input
 
 
-def validate(g, strict: bool, crypto: dict | None) -> tuple[list, list]:
+def validate(g, strict: bool) -> tuple[list, list]:
     errs, warns = [], []
 
     def is_type(nid, t):
@@ -91,16 +88,6 @@ def validate(g, strict: bool, crypto: dict | None) -> tuple[list, list]:
                                             or "@" in str(t.attrs["identity"])):
             warns.append(f"[W1] token {t.id[:12]} identity not run-scoped")
 
-    # [C1] crypto
-    if crypto is not None:
-        if isinstance(crypto, dict):
-            ok = crypto.get("ok")
-            ec = crypto.get("errors_count", crypto.get("errors"))
-            if ok is False or (isinstance(ec, int) and ec > 0):
-                errs.append(f"[C1] verify_work_package reported {ec} integrity errors")
-            for err in (crypto.get("errors") or []) if isinstance(crypto.get("errors"), list) else []:
-                errs.append(f"[C1] {err}")
-
     if strict:
         errs += warns
         warns = []
@@ -108,15 +95,13 @@ def validate(g, strict: bool, crypto: dict | None) -> tuple[list, list]:
 
 
 def main(argv: list) -> int:
-    ap = argparse.ArgumentParser(description="Validate a materialized trace graph.")
+    ap = argparse.ArgumentParser(description="Validate a trace graph's structure.")
     ap.add_argument("--input", "-i", required=True)
     ap.add_argument("--strict", action="store_true")
-    ap.add_argument("--crypto", help="verify_work_package JSON to fold in as [C1]")
     args = ap.parse_args(argv)
 
     g = load_graph(read_input(args.input))
-    crypto = read_input(args.crypto) if args.crypto else None
-    errs, warns = validate(g, args.strict, crypto)
+    errs, warns = validate(g, args.strict)
 
     for w in warns:
         print(f"WARN:  {w}", file=sys.stderr)

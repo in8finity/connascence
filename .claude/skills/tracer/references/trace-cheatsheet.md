@@ -4,9 +4,9 @@
 *connascent* when a change in one requires a change in the other to preserve
 correctness. It is a vocabulary for the *coupling* a call trace makes visible.
 
-The skill builds a call-trace graph in hashharness, then detects connascence as
-graph queries over it. Each finding is a `TraceConn` node pointing at the
-coupled elements.
+The skill builds a call-trace graph in memory, then detects connascence as graph
+queries over it. Each finding is a `TraceConn` node pointing at the coupled
+elements.
 
 ## The taxonomy (weakest → strongest)
 

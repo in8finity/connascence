@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
-"""Validate a TraceDoc against the ingest contract, dedup tokens, and emit a
-materialization plan (the ordered create_item calls).
+"""Validate a TraceDoc against the ingest contract and dedup tokens.
 
   python3 trace-ingest.py --input doc.json                 # validate + stats
-  python3 trace-ingest.py --input doc.json --plan          # ordered create plan
   python3 trace-ingest.py --input doc.json --dedup         # write deduped doc
 
-Token dedup (the volume mitigation from the design §10): tokens with identical
-(value_hash, identity, type) collapse to one class; step arg/return refs are
-rewritten to the class id. CoV/CoI then run over classes, not occurrences.
+Token dedup: tokens with identical (value_hash, identity, type) collapse to one
+class; step arg/return refs are rewritten to the class id. CoV/CoI then run over
+classes, not occurrences — important on a real runtime trace where one value
+appears millions of times.
 
-Materialization order (the link-id two-pass, design §4):
-  1. TraceSymbol  2. TraceToken  3. TraceStep (caller-before-callee)  4. TraceConn
-Each plan entry resolves adapter ids; the caller materializing against a live
-server replaces them with the returned record_sha256 as it goes.
-
-Stdlib only.
+Stdlib only. No server.
 """
 from __future__ import annotations
 
@@ -118,58 +112,9 @@ def dedup_tokens(doc: dict) -> tuple[dict, dict]:
     return new, stats
 
 
-def plan(doc: dict) -> list:
-    """Ordered create_item plan. Steps are toposorted caller-before-callee."""
-    wp = doc.get("work_package_id") or f"trace:{doc.get('entrypoint','unknown')}"
-    out = []
-    for s in doc.get("symbols", []):
-        out.append({"type": "TraceSymbol", "work_package_id": wp,
-                    "_id": s["id"], "title": s.get("qualname"),
-                    "attributes": {k: v for k, v in s.items() if k != "id"}})
-    for t in doc.get("tokens", []):
-        out.append({"type": "TraceToken", "work_package_id": wp,
-                    "_id": t["id"], "title": t.get("repr", t["id"]),
-                    "attributes": {k: v for k, v in t.items() if k != "id"}})
-    # toposort steps by caller dependency
-    steps = {st["id"]: st for st in doc.get("steps", [])}
-    emitted, order = set(), []
-
-    def emit(sid, stack):
-        if sid in emitted or sid not in steps:
-            return
-        if sid in stack:  # cycle guard
-            return
-        st = steps[sid]
-        for dep in (st.get("caller"), st.get("realizes")):
-            if dep in steps:
-                emit(dep, stack | {sid})
-        emitted.add(sid)
-        order.append(sid)
-
-    for sid in steps:
-        emit(sid, set())
-    for sid in order:
-        st = steps[sid]
-        links = {ln: st[ln] for ln in ("callee", "in_symbol", "caller", "realizes")
-                 if st.get(ln)}
-        if st.get("args"):
-            links["args"] = st["args"]
-        if st.get("returns"):
-            links["returns"] = st["returns"]
-        out.append({"type": "TraceStep", "work_package_id": wp, "_id": sid,
-                    "title": st.get("callee"),
-                    "attributes": {k: v for k, v in st.items()
-                                   if k not in ("id", "callee", "in_symbol",
-                                                "caller", "realizes", "args",
-                                                "returns")},
-                    "links": links})
-    return out
-
-
 def main(argv: list) -> int:
-    ap = argparse.ArgumentParser(description="Validate + plan a TraceDoc.")
+    ap = argparse.ArgumentParser(description="Validate + dedup a TraceDoc.")
     ap.add_argument("--input", "-i", required=True)
-    ap.add_argument("--plan", action="store_true", help="emit create_item plan")
     ap.add_argument("--dedup", action="store_true", help="emit deduped TraceDoc")
     ap.add_argument("--strict", action="store_true")
     args = ap.parse_args(argv)
@@ -179,16 +124,13 @@ def main(argv: list) -> int:
     if errs:
         for e in errs:
             print(f"ERROR: {e}", file=sys.stderr)
-        if args.strict or not (args.plan or args.dedup):
+        if args.strict or not args.dedup:
             return 1
 
     deduped, stats = dedup_tokens(doc)
 
     if args.dedup:
         print(json.dumps(deduped, indent=2))
-        return 0
-    if args.plan:
-        print(json.dumps(plan(deduped), indent=2))
         return 0
 
     print(f"OK: {len(doc.get('symbols',[]))} symbols, "

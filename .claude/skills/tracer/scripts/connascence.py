@@ -1,9 +1,8 @@
-"""Layer-2 catalog: the Page-Jones connascence taxonomy.
+"""The connascence catalog: the Page-Jones taxonomy.
 
-The analog of the aif-arguments `schemes.py` — an opaque-key registry the
-hashharness store knows nothing about. Detectors (`trace-detect.py`) and the
-validator import this catalog and interpret the `kind` strings stored on
-`TraceConn` nodes.
+An opaque-key registry: `TraceConn` nodes carry a `kind` string (CoN, CoI, …);
+this module is the only place those keys are interpreted. Detectors
+(`trace-detect.py`) and the validator import it.
 
 Connascence (Meilir Page-Jones, *What Every Programmer Should Know About
 Object-Oriented Design*, 1995): two elements are connascent when a change in one

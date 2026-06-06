@@ -1,14 +1,11 @@
 {
   "_comment": [
-    "Hashharness schema fragment for the tracer skill (Layer 1).",
-    "set_schema REPLACES the effective type set with a full snapshot — it does",
-    "NOT merge. So MERGE these four types into the current get_schema() map and",
-    "submit the ENTIRE set (expected_prev = current head). Submitting only these",
-    "four would wipe every other skill's types from the head. See SKILL.md Step 1.",
-    "They coexist with the AIF four (AifInode/AifRA/AifCA/AifPA).",
-    "Layer-2 connascence kind keys (CoN, CoI, ...) are NOT defined here — they",
-    "live as opaque strings in attributes.kind on TraceConn items and are",
-    "interpreted by scripts/connascence.py."
+    "The tracer data model: the four node types and their typed links.",
+    "This is documentation, not a server schema — the skill holds the graph in",
+    "memory (scripts/trace_io.py), which checks these link shapes structurally.",
+    "Links hold the target node's adapter-assigned id (sym:.../step:.../tok:...).",
+    "Connascence kind keys (CoN, CoI, ...) are NOT defined here — they are opaque",
+    "strings in TraceConn.attributes.kind, interpreted by scripts/connascence.py."
   ],
   "types": {
     "TraceSymbol": {
