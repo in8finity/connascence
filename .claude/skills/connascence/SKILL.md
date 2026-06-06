@@ -70,6 +70,7 @@ ingests it. Static and dynamic dumps share the shape, so they merge.
 | `adapters/ruby_ast.rb` | Ruby | static | same + **hash-access record shape** (`row[:k]` / `.fetch(:k)`), via prism | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/dart_ast.dart` | Dart | static | same + **index-access record shape** (`row['k']`), via package:analyzer | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/python_settrace.py` | Python | dynamic | real values, identities, order, threads (`sys.settrace`) | CoE, CoTm, CoV, CoI |
+| `adapters/ruby_tracepoint.rb` | Ruby | dynamic | real values, identities, order, threads (`TracePoint`) | CoE, CoTm, CoV, CoI |
 
 Run a **static** adapter for breadth (whole codebase, no execution) and a
 **dynamic** adapter for the strong, otherwise-invisible couplings; merge by
@@ -224,6 +225,8 @@ Prose is fine for a single short call chain or a throwaway question.
 - `adapters/dart_ast.dart` — static Dart spine via package:analyzer 6.x
   (`dart pub add --dev "analyzer:^6.0.0"`; run with `dart run`).
 - `adapters/python_settrace.py` — dynamic Python trace via `sys.settrace`.
+- `adapters/ruby_tracepoint.rb` — dynamic Ruby trace via `TracePoint` (stdlib;
+  run with `ruby`). NOT ruby-prof (a timing profiler lacks values/identities).
 
 ## References
 

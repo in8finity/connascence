@@ -108,13 +108,13 @@ how the history cache works?"* — and it drives this pipeline for you.
 | Python | `python_ast.py` (static), `python_settrace.py` (dynamic) | static + dynamic | stdlib only |
 | TypeScript / JS | `typescript_ast.mjs` | static | `npm i -D typescript` |
 | PHP | `php_ast.php` | static | `composer require --dev nikic/php-parser` |
-| Ruby | `ruby_ast.rb` | static | Ruby 3.4+ (prism bundled) |
+| Ruby | `ruby_ast.rb` (static), `ruby_tracepoint.rb` (dynamic) | static + dynamic | Ruby 3.4+ (prism bundled); TracePoint is stdlib |
 | Dart | `dart_ast.dart` | static | `dart pub add --dev "analyzer:^6.0.0"` |
 
 Each static adapter also captures **record shape** — `row['user_id']` /
 `row.userId` / `$row['id']` / `row[:id]` (Dart/PHP/JS/Ruby/Python alike) — the
 dict/DB-row key coupling that
-breaks silently when a producer renames a field. The Python dynamic adapter adds
+breaks silently when a producer renames a field. The Python (`sys.settrace`) and Ruby (`TracePoint`) dynamic adapters add
 the runtime-only kinds (execution order, timing, value, identity).
 
 ## What it is not

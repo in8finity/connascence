@@ -130,6 +130,10 @@ detecting on a large dynamic trace.
 - `scripts/adapters/python_settrace.py` — **dynamic** Python trace via
   `sys.settrace`; captures real values/identities/order/threads. Pass
   `Tracer(scope=["src/"])` to record only your code (skip stdlib/library noise).
+- `scripts/adapters/ruby_tracepoint.rb` — **dynamic** Ruby trace via `TracePoint`
+  (stdlib); captures real values/identities/order/threads. `Tracer.new(scope:
+  ['lib'])` records only your code. (Not ruby-prof — a profiler lacks the values
+  and identities the dynamic kinds need.)
 
 A static and a dynamic doc for the same code **merge** by matching
 `(callee qualname, site_file, site_line)`: set `realizes` on each dynamic step
