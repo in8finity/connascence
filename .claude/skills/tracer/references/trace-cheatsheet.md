@@ -45,6 +45,9 @@ dataclass / `from_db_row` / typed interface at the boundary.
   (property access), using the type checker to keep property access precise —
   only `any`, index-signature (`Record<>`), interface, and object-literal bases
   count; class instances, methods, arrays, namespaces, and builtins are excluded.
+- **PHP** captures `$row['key']` (array-dim — PHP's associative-array DB-row /
+  JSON pattern). Property fetch `$obj->prop` is *not* captured: with no type
+  checker it's indistinguishable from class-member access.
 
 The static spine alone yields kinds 1–5; a dynamic overlay (real values,
 identities, ordering, threads) unlocks 6–9. This is why the skill supports

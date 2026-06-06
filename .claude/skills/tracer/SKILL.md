@@ -66,6 +66,7 @@ ingests it. Static and dynamic dumps share the shape, so they merge.
 |---|---|---|---|---|
 | `adapters/python_ast.py` | Python | static | symbols + call sites + literal args + **dict-key access** (stdlib `ast`) | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/typescript_ast.mjs` | TS / JS | static | same + **property/element record access** (`row.k` / `row["k"]`), via the TypeScript compiler API | CoN, CoT, CoM, CoP, record-shape |
+| `adapters/php_ast.php` | PHP | static | same + **array-dim record access** (`$row['k']`), via nikic/php-parser | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/python_settrace.py` | Python | dynamic | real values, identities, order, threads (`sys.settrace`) | CoE, CoTm, CoV, CoI |
 
 Run a **static** adapter for breadth (whole codebase, no execution) and a
@@ -74,8 +75,10 @@ Run a **static** adapter for breadth (whole codebase, no execution) and a
 V8 cpuprofile, …) are separate adapters emitting the same JSON.
 
 `typescript_ast.mjs` needs the `typescript` package — `npm i -D typescript` in
-the project being analyzed (it resolves the compiler from your cwd). The Python
-adapters are stdlib-only.
+the project being analyzed (it resolves the compiler from your cwd).
+`php_ast.php` needs PHP + nikic/php-parser — `composer require --dev
+nikic/php-parser` in the project (it finds `vendor/autoload.php` from your cwd or
+`COMPOSER_VENDOR`). The Python adapters are stdlib-only.
 
 ## Workflow
 
@@ -198,6 +201,8 @@ Prose is fine for a single short call chain or a throwaway question.
 - `adapters/python_ast.py` — static Python spine via `ast` (stdlib).
 - `adapters/typescript_ast.mjs` — static TS/JS spine via the TypeScript compiler
   API (needs `npm i -D typescript`; run with `node`).
+- `adapters/php_ast.php` — static PHP spine via nikic/php-parser (needs
+  `composer require --dev nikic/php-parser`; run with `php`).
 - `adapters/python_settrace.py` — dynamic Python trace via `sys.settrace`.
 
 ## References

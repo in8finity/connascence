@@ -117,6 +117,9 @@ detecting on a large dynamic trace.
 - `scripts/adapters/typescript_ast.mjs` — **static** TS/JS spine via the
   TypeScript compiler API (accurate callee/type resolution). Needs
   `npm i -D typescript` in the analyzed project.
+- `scripts/adapters/php_ast.php` — **static** PHP spine via nikic/php-parser
+  (name-based resolution + `$row['key']` array-dim record shape). Needs
+  `composer require --dev nikic/php-parser`; run with `php`.
   `node typescript_ast.mjs src --module-root src > static.json`
 - `scripts/adapters/python_settrace.py` — **dynamic** Python trace via
   `sys.settrace`; captures real values/identities/order/threads.
