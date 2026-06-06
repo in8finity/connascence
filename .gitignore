@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 node_modules/
 .DS_Store
+
+# dependency-install dirs — never vendored into this repo (see system-models/licenses.als)
+vendor/
+.dart_tool/
+.pub-cache/
