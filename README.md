@@ -106,7 +106,7 @@ how the history cache works?"* — and it drives this pipeline for you.
 | language | adapter | spine | needs |
 |----------|---------|-------|-------|
 | Python | `python_ast.py` (static), `python_settrace.py` (dynamic) | static + dynamic | stdlib only |
-| TypeScript / JS | `typescript_ast.mjs` | static | `npm i -D typescript` |
+| TypeScript / JS | `typescript_ast.mjs` (static), `js_instrument.js` (dynamic, Node) | static + dynamic | `npm i -D typescript`; instrumentation is stdlib |
 | PHP | `php_ast.php` | static | `composer require --dev nikic/php-parser` |
 | Ruby | `ruby_ast.rb` (static), `ruby_tracepoint.rb` (dynamic) | static + dynamic | Ruby 3.4+ (prism bundled); TracePoint is stdlib |
 | Dart | `dart_ast.dart` | static | `dart pub add --dev "analyzer:^6.0.0"` |
@@ -114,8 +114,9 @@ how the history cache works?"* — and it drives this pipeline for you.
 Each static adapter also captures **record shape** — `row['user_id']` /
 `row.userId` / `$row['id']` / `row[:id]` (Dart/PHP/JS/Ruby/Python alike) — the
 dict/DB-row key coupling that
-breaks silently when a producer renames a field. The Python (`sys.settrace`) and Ruby (`TracePoint`) dynamic adapters add
-the runtime-only kinds (execution order, timing, value, identity).
+breaks silently when a producer renames a field. The Python (`sys.settrace`), Ruby (`TracePoint`), and Node (function-
+wrapping) dynamic adapters add the runtime-only kinds (execution order, timing,
+value, identity).
 
 ## What it is not
 

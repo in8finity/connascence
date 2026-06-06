@@ -71,6 +71,7 @@ ingests it. Static and dynamic dumps share the shape, so they merge.
 | `adapters/dart_ast.dart` | Dart | static | same + **index-access record shape** (`row['k']`), via package:analyzer | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/python_settrace.py` | Python | dynamic | real values, identities, order, threads (`sys.settrace`) | CoE, CoTm, CoV, CoI |
 | `adapters/ruby_tracepoint.rb` | Ruby | dynamic | real values, identities, order, threads (`TracePoint`) | CoE, CoTm, CoV, CoI |
+| `adapters/js_instrument.js` | JS / TS (Node) | dynamic | values, identities, order via function wrapping | CoV, CoI, CoE (CoTm only with `worker_threads`) |
 
 Run a **static** adapter for breadth (whole codebase, no execution) and a
 **dynamic** adapter for the strong, otherwise-invisible couplings; merge by
@@ -227,6 +228,12 @@ Prose is fine for a single short call chain or a throwaway question.
 - `adapters/python_settrace.py` — dynamic Python trace via `sys.settrace`.
 - `adapters/ruby_tracepoint.rb` — dynamic Ruby trace via `TracePoint` (stdlib;
   run with `ruby`). NOT ruby-prof (a timing profiler lacks values/identities).
+- `adapters/js_instrument.js` — dynamic Node trace via function wrapping
+  (CommonJS; `require` the target and drive through its exports). NOT a
+  `--cpu-prof` reader (a profile lacks values/identities). TS: compile to CJS or
+  instrument the emitted JS. Caveat: same-module internal calls (not via the
+  exported binding) aren't captured — JS has no call hook; drive through exports
+  or instrument each module so cross-module calls route through the wrappers.
 
 ## References
 

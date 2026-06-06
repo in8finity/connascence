@@ -134,6 +134,11 @@ detecting on a large dynamic trace.
   (stdlib); captures real values/identities/order/threads. `Tracer.new(scope:
   ['lib'])` records only your code. (Not ruby-prof — a profiler lacks the values
   and identities the dynamic kinds need.)
+- `scripts/adapters/js_instrument.js` — **dynamic** Node trace via function
+  wrapping (CommonJS). `tr.instrument(mod, 'name')` wraps a module's exported
+  functions + class-prototype methods; drive through the exports. Captures
+  values/identities/order; CoTm only under `worker_threads`. (Not a --cpu-prof
+  reader — a profile lacks values/identities.)
 
 A static and a dynamic doc for the same code **merge** by matching
 `(callee qualname, site_file, site_line)`: set `realizes` on each dynamic step
