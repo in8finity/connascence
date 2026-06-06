@@ -143,6 +143,27 @@ value, identity) that a static call graph cannot see.
     adapters/               # python / typescript / php / ruby / dart
 ```
 
+## Dependencies & licenses
+
+The **core** (detectors, ingest, validate, render) and the **Python adapters**,
+**JS dynamic**, and **Ruby dynamic** adapters are **stdlib-only — no third-party
+dependencies**. The other adapters need a per-language parser/extension, pulled
+in by *you* for the language you analyze. Nothing is bundled or redistributed by
+this repo — it ships only its own MIT code — so these impose no obligation on it.
+All are permissive (no copyleft):
+
+| dependency | used by | install | license |
+|---|---|---|---|
+| `typescript` | `typescript_ast.mjs` | `npm i -D typescript` | Apache-2.0 |
+| `nikic/php-parser` | `php_ast.php` | `composer require --dev nikic/php-parser` | BSD-3-Clause |
+| `uopz` | `php_uopz.php` | `pecl install uopz` | PHP License 3.01 |
+| `prism` | `ruby_ast.rb` | bundled with Ruby 3.4+ (`gem install prism` otherwise) | MIT |
+| `analyzer` (`^6`) | `dart_ast.dart`, `dart_trace.dart` | `dart pub add --dev "analyzer:^6.0.0"` | BSD-3-Clause |
+
+`trace-render.py` only emits DOT text; rendering it to SVG uses the optional
+Graphviz `dot` CLI (EPL-1.0), a separate tool you run by hand — not invoked or
+bundled here.
+
 ## Background
 
 Connascence is Meilir Page-Jones's taxonomy of coupling, from *What Every
