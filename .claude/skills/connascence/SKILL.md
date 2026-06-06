@@ -73,6 +73,7 @@ ingests it. Static and dynamic dumps share the shape, so they merge.
 | `adapters/ruby_tracepoint.rb` | Ruby | dynamic | real values, identities, order, threads (`TracePoint`) | CoE, CoTm, CoV, CoI |
 | `adapters/js_instrument.js` | JS / TS (Node) | dynamic | values, identities, order via function wrapping | CoV, CoI, CoE (CoTm only with `worker_threads`) |
 | `adapters/php_uopz.php` | PHP | dynamic | values, identities, order via uopz hooks | CoV, CoI, CoE (CoTm needs real threads) |
+| `adapters/dart_trace.dart` | Dart | dynamic | values, identities, order via source instrumentation | CoV, CoI, CoE (CoTm n/a — isolates don't share memory) |
 
 Run a **static** adapter for breadth (whole codebase, no execution) and a
 **dynamic** adapter for the strong, otherwise-invisible couplings; merge by
@@ -241,6 +242,13 @@ Prose is fine for a single short call chain or a throwaway question.
   identity (CoV only); uopz hooks see live `$this`/args, so `spl_object_id`
   gives real identity. Pre-hook only → no `returns`/`caller` (the dynamic kinds
   need neither). Classes autoloaded after `instrument()` aren't hooked.
+- `adapters/dart_trace.dart` — dynamic Dart trace via **source instrumentation**
+  (Dart has no call hook and no method replacement). Rewrites the source to
+  inject a recording call at each function/method body, compiles + runs the copy;
+  identity via `identityHashCode`. The heaviest, most constrained adapter:
+  single entry file, `dart run`-able with no package deps, skips getters/setters/
+  operators and factory/redirecting constructors. Needs `analyzer:^6.0.0` + the
+  Dart SDK.
 
 ## References
 

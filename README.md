@@ -109,14 +109,15 @@ how the history cache works?"* — and it drives this pipeline for you.
 | TypeScript / JS | `typescript_ast.mjs` (static), `js_instrument.js` (dynamic, Node) | static + dynamic | `npm i -D typescript`; instrumentation is stdlib |
 | PHP | `php_ast.php` (static), `php_uopz.php` (dynamic) | static + dynamic | `composer require --dev nikic/php-parser`; `pecl install uopz` |
 | Ruby | `ruby_ast.rb` (static), `ruby_tracepoint.rb` (dynamic) | static + dynamic | Ruby 3.4+ (prism bundled); TracePoint is stdlib |
-| Dart | `dart_ast.dart` | static | `dart pub add --dev "analyzer:^6.0.0"` |
+| Dart | `dart_ast.dart` (static), `dart_trace.dart` (dynamic) | static + dynamic | `dart pub add --dev "analyzer:^6.0.0"` |
 
 Each static adapter also captures **record shape** — `row['user_id']` /
 `row.userId` / `$row['id']` / `row[:id]` (Dart/PHP/JS/Ruby/Python alike) — the
 dict/DB-row key coupling that
-breaks silently when a producer renames a field. The Python (`sys.settrace`), Ruby (`TracePoint`), Node (function-wrapping),
-and PHP (uopz hooks) dynamic adapters add the runtime-only kinds (execution
-order, timing, value, identity).
+breaks silently when a producer renames a field. Every language has a dynamic adapter too — Python (`sys.settrace`), Ruby
+(`TracePoint`), Node (function-wrapping), PHP (uopz hooks), and Dart (source
+instrumentation) — adding the runtime-only kinds (execution order, timing,
+value, identity) that a static call graph cannot see.
 
 ## What it is not
 

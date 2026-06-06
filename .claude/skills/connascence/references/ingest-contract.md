@@ -144,6 +144,11 @@ detecting on a large dynamic trace.
   `$this` + args, so `spl_object_id` yields real identity. Captures
   values/identities/order. (Not an Xdebug-trace reader — Xdebug renders objects
   by value with no handle, so it can't recover identity.)
+- `scripts/adapters/dart_trace.dart` — **dynamic** Dart trace via source
+  instrumentation (Dart has no runtime call hook). Rewrites the entry file to
+  inject a recording call per body, compiles + runs the copy; identity via
+  `identityHashCode`. Most constrained adapter — single dep-free entry file.
+  Needs `analyzer:^6.0.0` + the Dart SDK.
 
 A static and a dynamic doc for the same code **merge** by matching
 `(callee qualname, site_file, site_line)`: set `realizes` on each dynamic step
