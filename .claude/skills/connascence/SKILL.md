@@ -167,6 +167,28 @@ Checks structural well-formedness (every step has a resolvable `callee`,
 caller-tree is acyclic, identities are run-scoped). Useful when writing a new
 adapter.
 
+## Cross-stack merge (schema ↔ code)
+
+Because every adapter emits the same TraceDoc, docs from different stacks merge
+into one graph. The high-value case: a SQL schema and the app code that reads it.
+A table is a `record` (columns = keys); a `users['email']` / `row['email']`
+access in app code is the same record-shape coupling. `trace-merge.py`
+canonicalizes record symbols to a shared id so they collapse:
+
+```bash
+python3 scripts/adapters/sql_sqlglot.py schema.sql --dialect postgres > sql.json
+python3 scripts/adapters/python_ast.py  app/ --module-root app          > app.json
+python3 scripts/trace-merge.py sql.json app.json --map row=users > merged.json
+python3 scripts/trace-detect.py --input merged.json
+```
+
+`--map <base>=<table>` renames an app record's row variable (`row`, `u`) to the
+table it represents; SQL table records already use the table name. After the
+merge a column's record-shape finding spans both stacks — its `elements` include
+the SQL query sites *and* the app sites, so "rename `users.email`" reports its
+true full-stack blast radius. Non-record symbols are namespaced per input doc, so
+ids never collide; all links are rewritten.
+
 ## The connascence catalog
 
 Weakest → strongest. Refactoring lowers **strength**, lowers **degree**, raises
@@ -222,6 +244,9 @@ Prose is fine for a single short call chain or a throwaway question.
   `--only`, `--min-degree`, `--exclude-external`, `--include-provisional`;
   ranked by severity.
 - `trace-validate.py` — structural well-formedness checks.
+- `trace-merge.py` — merge several TraceDocs into one **cross-stack** graph;
+  `--map base=table` aligns an app record's row variable to a SQL table so the
+  same column collapses to one node (see Cross-stack below).
 - `trace-render.py` — Graphviz DOT (`--conn-only` for the overlay alone).
 - `adapters/python_ast.py` — static Python spine via `ast` (stdlib).
 - `adapters/typescript_ast.mjs` — static TS/JS spine via the TypeScript compiler

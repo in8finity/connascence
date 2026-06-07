@@ -118,10 +118,11 @@ dict/DB-row key coupling that
 breaks silently when a producer renames a field. The **SQL** adapter models a
 schema the same way — a table is a record, its columns are the keys — so a
 column's blast radius (how many queries reference it) is the same record-shape
-finding. Because every adapter emits the same TraceDoc, a SQL dump and an app dump can
-be **merged** into one graph: when the app's row variable is named for its table,
-`users.email` in the schema and `users['email']` in Python collapse to one
-cross-stack coupling — a column's blast radius counted across the whole stack. Every language has a dynamic adapter too — Python (`sys.settrace`), Ruby
+finding. Because every adapter emits the same TraceDoc, a SQL dump and an app dump
+**merge** into one graph (`trace-merge.py`): `trace-merge.py sql.json app.json
+--map row=users` collapses `users.email` in the schema and `row['email']` in
+Python into one node, so a column's blast radius is counted across the whole
+stack — rename it and the finding lists the SQL query sites *and* the app sites. Every language has a dynamic adapter too — Python (`sys.settrace`), Ruby
 (`TracePoint`), Node (function-wrapping), PHP (uopz hooks), and Dart (source
 instrumentation) — adding the runtime-only kinds (execution order, timing,
 value, identity) that a static call graph cannot see.
@@ -146,6 +147,7 @@ value, identity) that a static call graph cannot see.
     trace-detect.py         # the 9 detectors, ranked
     trace-ingest.py         # validate + dedup
     trace-validate.py       # structural checks
+    trace-merge.py          # merge docs into one cross-stack graph
     trace-render.py         # Graphviz DOT
     adapters/               # python / typescript / php / ruby / dart / sql
 ```
