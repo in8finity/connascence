@@ -135,6 +135,11 @@ def detect_records(g: Graph, min_keys: int):
 def detect_CoT(g: Graph):
     out = []
     for sym in g.symbols():
+        # CoT is about callable parameter-type agreement. `record` symbols carry
+        # their columns/keys as params (for record-shape / positional CoP), not a
+        # typed call signature — skip them and other non-callables.
+        if sym.attrs.get("kind") in ("record", "module", "external"):
+            continue
         params = sym.attrs.get("params") or []
         callsites = [s for s in g.steps() if s.links.get("callee") == sym.id]
         for p in params:

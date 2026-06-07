@@ -52,6 +52,10 @@ dataclass / `from_db_row` / typed interface at the boundary.
   params-hash / JSON / DB-row pattern). Symbol and string keys both count.
 - **Dart** captures `row['key']` (index access — Map / JSON / decoded-row
   pattern). Dart writes parameter types inline, so CoT is informative here.
+- **SQL** is record-shape end to end: a table is the record, each column
+  reference (`SELECT col`, `WHERE col`, `INSERT(col)`) is a key. Degree = columns
+  the corpus couples to; per-column reference counts (in the TraceDoc) are the
+  rename blast radius. The schema is the *producer*; queries are the consumers.
 
 The static spine alone yields kinds 1–5; a dynamic overlay (real values,
 identities, ordering, threads) unlocks 6–9. This is why the skill supports

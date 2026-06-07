@@ -110,11 +110,18 @@ how the history cache works?"* — and it drives this pipeline for you.
 | PHP | `php_ast.php` (static), `php_uopz.php` (dynamic) | static + dynamic | `composer require --dev nikic/php-parser`; `pecl install uopz` |
 | Ruby | `ruby_ast.rb` (static), `ruby_tracepoint.rb` (dynamic) | static + dynamic | Ruby 3.4+ (prism bundled); TracePoint is stdlib |
 | Dart | `dart_ast.dart` (static), `dart_trace.dart` (dynamic) | static + dynamic | `dart pub add --dev "analyzer:^6.0.0"` |
+| SQL | `sql_sqlglot.py` (static) | static | `pip install sqlglot` |
 
 Each static adapter also captures **record shape** — `row['user_id']` /
 `row.userId` / `$row['id']` / `row[:id]` (Dart/PHP/JS/Ruby/Python alike) — the
 dict/DB-row key coupling that
-breaks silently when a producer renames a field. Every language has a dynamic adapter too — Python (`sys.settrace`), Ruby
+breaks silently when a producer renames a field. The **SQL** adapter models a
+schema the same way — a table is a record, its columns are the keys — so a
+column's blast radius (how many queries reference it) is the same record-shape
+finding. Because every adapter emits the same TraceDoc, a SQL dump and an app dump can
+be **merged** into one graph: when the app's row variable is named for its table,
+`users.email` in the schema and `users['email']` in Python collapse to one
+cross-stack coupling — a column's blast radius counted across the whole stack. Every language has a dynamic adapter too — Python (`sys.settrace`), Ruby
 (`TracePoint`), Node (function-wrapping), PHP (uopz hooks), and Dart (source
 instrumentation) — adding the runtime-only kinds (execution order, timing,
 value, identity) that a static call graph cannot see.
@@ -140,7 +147,7 @@ value, identity) that a static call graph cannot see.
     trace-ingest.py         # validate + dedup
     trace-validate.py       # structural checks
     trace-render.py         # Graphviz DOT
-    adapters/               # python / typescript / php / ruby / dart
+    adapters/               # python / typescript / php / ruby / dart / sql
 ```
 
 ## Dependencies & licenses

@@ -126,6 +126,10 @@ detecting on a large dynamic trace.
 - `scripts/adapters/dart_ast.dart` — **static** Dart spine via package:analyzer
   6.x (name-based resolution + declared param types + `row['key']` index-access
   record shape). `dart pub add --dev "analyzer:^6.0.0"`; run with `dart run`.
+- `scripts/adapters/sql_sqlglot.py` — **static** SQL spine via sqlglot. A table
+  is a `record` symbol (columns = keys); column references are record-access
+  steps (→ column/table rename blast radius), positional `INSERT` → CoP, `CALL`
+  → call graph. `pip install sqlglot`; run with `python3`; `--dialect` optional.
   `node typescript_ast.mjs src --module-root src > static.json`
 - `scripts/adapters/python_settrace.py` — **dynamic** Python trace via
   `sys.settrace`; captures real values/identities/order/threads. Pass

@@ -69,6 +69,7 @@ ingests it. Static and dynamic dumps share the shape, so they merge.
 | `adapters/php_ast.php` | PHP | static | same + **array-dim record access** (`$row['k']`), via nikic/php-parser | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/ruby_ast.rb` | Ruby | static | same + **hash-access record shape** (`row[:k]` / `.fetch(:k)`), via prism | CoN, CoT, CoM, CoP, record-shape |
 | `adapters/dart_ast.dart` | Dart | static | same + **index-access record shape** (`row['k']`), via package:analyzer | CoN, CoT, CoM, CoP, record-shape |
+| `adapters/sql_sqlglot.py` | SQL (schema + queries) | static | tables as **records** (columns = keys), column refs, positional INSERT, CALL graph (sqlglot) | record-shape CoN (column/table blast radius), CoP |
 | `adapters/python_settrace.py` | Python | dynamic | real values, identities, order, threads (`sys.settrace`) | CoE, CoTm, CoV, CoI |
 | `adapters/ruby_tracepoint.rb` | Ruby | dynamic | real values, identities, order, threads (`TracePoint`) | CoE, CoTm, CoV, CoI |
 | `adapters/js_instrument.js` | JS / TS (Node) | dynamic | values, identities, order via function wrapping | CoV, CoI, CoE (CoTm only with `worker_threads`) |
@@ -91,7 +92,11 @@ in-scope ancestor), so the call tree stays intact.
 the project being analyzed (it resolves the compiler from your cwd).
 `php_ast.php` needs PHP + nikic/php-parser — `composer require --dev
 nikic/php-parser` in the project (it finds `vendor/autoload.php` from your cwd or
-`COMPOSER_VENDOR`). `ruby_ast.rb` needs Ruby 3.4+ (prism is bundled) or
+`COMPOSER_VENDOR`). `sql_sqlglot.py` needs `pip install sqlglot` (multi-dialect;
+pass `--dialect postgres|mysql|tsql|…`). SQL is a different shape — the schema is
+the *producer* and queries are name-coupled *consumers*, so a table is a record
+and a column reference is record-shape coupling; "rename this column → what
+breaks" is the headline. Deep stored-procedure bodies are only partially parsed. `ruby_ast.rb` needs Ruby 3.4+ (prism is bundled) or
 `gem install prism` on older Rubies. `dart_ast.dart` needs the Dart SDK +
 `package:analyzer` 6.x — `dart pub add --dev "analyzer:^6.0.0"` in a Dart package
 (analyzer 13+ changed the AST API; pin ^6). The Python adapters are stdlib-only.
@@ -227,6 +232,9 @@ Prose is fine for a single short call chain or a throwaway question.
   else `gem install prism`; run with `ruby`).
 - `adapters/dart_ast.dart` — static Dart spine via package:analyzer 6.x
   (`dart pub add --dev "analyzer:^6.0.0"`; run with `dart run`).
+- `adapters/sql_sqlglot.py` — static SQL spine via sqlglot (`pip install
+  sqlglot`; run with `python3`). Tables→records, column refs→record-shape,
+  positional INSERT→CoP, CALL→call graph.
 - `adapters/python_settrace.py` — dynamic Python trace via `sys.settrace`.
 - `adapters/ruby_tracepoint.rb` — dynamic Ruby trace via `TracePoint` (stdlib;
   run with `ruby`). NOT ruby-prof (a timing profiler lacks values/identities).
